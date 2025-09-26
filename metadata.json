@@ -1,0 +1,5 @@
+{
+  "name": "SeaLens - Marine Organism Detection",
+  "description": "An advanced intelligent microscopy system for precise identification and automated counting of microscopic marine organisms, powered by Gemini.",
+  "requestFramePermissions": []
+}
