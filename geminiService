@@ -1,0 +1,73 @@
+import { GoogleGenAI, Type } from '@google/genai';
+import { ScanResults } from '../types';
+
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+
+export const getMarineOrganismCounts = async (): Promise<ScanResults> => {
+  try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: `Simulate a plausible analysis of a microscopic marine water sample from the open ocean. Provide a count and a confidence score (accuracy) between 0.90 and 0.99 for the following organisms: Plankton, Algae, Bacteria, and Protozoa. The counts should be integers and represent a high-density sample.`,
+      config: {
+        responseMimeType: 'application/json',
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            plankton: {
+              type: Type.OBJECT,
+              properties: {
+                count: { type: Type.INTEGER, description: 'The count of plankton organisms.' },
+                accuracy: { type: Type.NUMBER, description: 'The accuracy of the plankton count, between 0 and 1.' }
+              },
+              required: ['count', 'accuracy']
+            },
+            algae: {
+              type: Type.OBJECT,
+              properties: {
+                count: { type: Type.INTEGER, description: 'The count of algae organisms.' },
+                accuracy: { type: Type.NUMBER, description: 'The accuracy of the algae count, between 0 and 1.' }
+              },
+              required: ['count', 'accuracy']
+            },
+            bacteria: {
+              type: Type.OBJECT,
+              properties: {
+                count: { type: Type.INTEGER, description: 'The count of bacteria organisms.' },
+                accuracy: { type: Type.NUMBER, description: 'The accuracy of the bacteria count, between 0 and 1.' }
+              },
+              required: ['count', 'accuracy']
+            },
+            protozoa: {
+              type: Type.OBJECT,
+              properties: {
+                count: { type: Type.INTEGER, description: 'The count of protozoa organisms.' },
+                accuracy: { type: Type.NUMBER, description: 'The accuracy of the protozoa count, between 0 and 1.' }
+              },
+              required: ['count', 'accuracy']
+            },
+          },
+          required: ['plankton', 'algae', 'bacteria', 'protozoa'],
+        },
+      },
+    });
+
+    const jsonText = response.text.trim();
+    
+    if (jsonText.startsWith('```json')) {
+        const cleanedJson = jsonText.replace(/^```json\n/, '').replace(/\n```$/, '');
+        return JSON.parse(cleanedJson) as ScanResults;
+    }
+    
+    return JSON.parse(jsonText) as ScanResults;
+
+  } catch (error) {
+    console.error('Error fetching marine organism counts from Gemini:', error);
+    // Provide fallback data in case of an API error to ensure app functionality
+    return {
+      plankton: { count: Math.floor(Math.random() * 180) + 70, accuracy: Math.random() * 0.09 + 0.9 },
+      algae: { count: Math.floor(Math.random() * 250) + 150, accuracy: Math.random() * 0.09 + 0.9 },
+      bacteria: { count: Math.floor(Math.random() * 800) + 300, accuracy: Math.random() * 0.09 + 0.9 },
+      protozoa: { count: Math.floor(Math.random() * 120) + 30, accuracy: Math.random() * 0.09 + 0.9 },
+    };
+  }
+};
